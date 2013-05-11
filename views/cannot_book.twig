@@ -1,0 +1,12 @@
+{% extends 'layout.twig' %}
+
+{% block title event.name %}
+
+{% block content %}
+
+<h1>{{ event.name }}</h1>
+<h3>I'm sorry to tell you this, but this event is now fully booked!</h3>
+
+<a href="{{ path('book', {event: event.slug}) }}" class="btn btn-small btn-primary">Go Back to Event Page</a>
+
+{% endblock %}

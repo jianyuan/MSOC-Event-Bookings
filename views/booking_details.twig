@@ -1,0 +1,35 @@
+{% extends 'layout.twig' %}
+
+{% block title 'Booking Details for ' ~ event.name %}
+
+{% block content %}
+
+<h1>{{ event.name }}</h1>
+
+<hr>
+
+{% if showSuccess is defined and showSuccess %}
+	<h4>Success!</h4>
+	<p>We have successfully received your booking.</p>
+{% endif %}
+
+{% if event.booking.queue > event.places %}
+	<h3>Important!</h3>
+	<p>Your booking is currently being put on hold until someone cancels his or her reservation.</p>
+	<p>There are <span class="badge badge-inverse">{{ event.booking.queue - event.places }}</span> people waiting in front of you.</p>
+{% endif %}
+
+<hr>
+
+<p>Reference number: <strong>#{{ "%05.0f"|format(event.booking.id) }}</strong></p>
+<p>Booked on <strong>{{ event.booking.time|date("d/m/Y") }}</strong> at <strong>{{ event.booking.time|date("h:ia") }}</strong>.</p>
+<p>Your place number is <strong>{{ event.booking.queue }}</strong> out of <strong>{{ event.places }}</strong> in total.</p>
+{% if event.booking.queue <= event.places %}
+	<p>You will be contacted by our committee shortly.</p>
+{% endif %}
+
+<hr>
+
+<a href="{{ path('book', {event: event.slug}) }}" class="btn btn-small btn-primary">Go Back to Event Page</a>
+
+{% endblock %}

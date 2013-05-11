@@ -1,0 +1,29 @@
+{% extends 'layout.twig' %}
+
+{% block title 'My Information' %}
+
+{% block content %}
+
+<h1>{{ name }}</h1>
+<h4>{{ email }}</h4>
+
+{% if membership %}
+<h5>A member of ICUMS since {{ membership.registered|date("d/m/Y") }}</h5>
+{% else %}
+<h5>Non-member</h5>
+<p><a class="btn btn-large btn-success" href="{{ app.msoc.purchase_membership_url }}">Purchase Membership Now!</a></p>
+{% endif %}
+
+<hr>
+
+<p>
+{% for line in info %}
+{{ line }}<br>
+{% endfor %}
+</p>
+
+<hr>
+
+<a href="{{ path('events') }}" class="btn btn-small">View Events</a>
+
+{% endblock %}

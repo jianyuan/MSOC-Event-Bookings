@@ -1,0 +1,14 @@
+{% extends 'layout.twig' %}
+
+{% block title 'Membership' %}
+
+{% block content %}
+
+<div class="jumbotron">
+	<h1>What!<br>You're not a member yet!?</h1>
+	<p class="lead">Purchase your ICUMS membership now<br>to enjoy exclusive discounts and offers!</p>
+	<a class="btn btn-large btn-success" href="{{ app.msoc.purchase_membership_url }}">Purchase Now!</a>
+	<a class="btn btn-large btn-danger" href="{{ path('events') }}">I'll Buy It Later</a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,5 @@
+Name,Email,Time,Has Membership
+{% for place in places %}
+{{ place.name }},{{ place.email }},{{ place.time }},{% if place.has_membership %}yes{% else %}no{% endif %}
+
+{% endfor %}

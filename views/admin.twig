@@ -1,0 +1,21 @@
+{% extends 'layout.twig' %}
+
+{% block title 'Administer' %}
+
+{% block content %}
+
+<h1>Administer</h1>
+<h3>Events</h3>
+<ul>
+	{% for event in events %}
+		<li><a href="{{ path('admin_event', {id: event.id}) }}">{{ event.name }}</a></li>
+	{% endfor %}
+</ul>
+
+<h3>Society</h3>
+<ul>
+	<li><a href="{{ path('admin_last_actives') }}">View Last Active Users</a></li>
+	<li><a href="{{ path('admin_members') }}">View ICUMS Members</a></li>
+</ul>
+
+{% endblock %}

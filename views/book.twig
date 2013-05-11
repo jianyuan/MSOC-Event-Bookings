@@ -1,0 +1,182 @@
+{% extends 'layout.twig' %}
+
+{% block title event.name %}
+
+{% block content %}
+
+<div class="jumbotron">
+	<h1>{{ event.name }}</h1>
+	{% if event.description %}
+	<p class="lead">{{ event.description|raw }}</p>
+	{% endif %}
+	{# <p>Places Left: <span class="places-left-counter">{{ event.places_left }}</span></p> #}
+
+	<div class="availability">
+		<h4>Availability of Places (<span class="places-left-counter">{{ event.places_left }}</span>)</h4>
+		<div class="row-fluid">
+			<div class="span6 offset3">
+				<div class="progress progress-striped active">
+					<div class="bar {% if (event.places_left / event.places) == 0 %}bar-danger{% elseif (event.places_left / event.places) <= 0.25 %}bar-warning{% else %}bar-success{% endif %}" style="width: {{ (event.places_left / event.places * 100) }}%;"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{% if event.booking %}
+		<div class="book-form">
+			<h2>You already booked!</h2>
+			<a href="{{ path('booking_details', {event: event.slug}) }}" class="btn btn-small btn-info">View Booking Details</a>
+		</div>
+	{% else %}
+		{% if not event.booking_opened %}
+			<p>Booking opens on <strong>{{ event.opening_time|date("d/m/Y") }}</strong> at <strong>{{ event.opening_time|date("h:ia") }}</strong>.</p>
+
+			<div class="row-fluid">
+				<div class="span6 offset3" id="countdown"></div>
+			</div>
+		{% endif %}
+
+		{% if event.fully_booked or event.allow_overbook %}
+			<h3{% if not event.fully_booked %} class="fully-booked" style="display: none"{% endif %}>This event is now Fully Booked!</h3>
+			{% if event.allow_overbook %}
+				<h5 class="fully-booked"{% if not event.fully_booked %} style="display: none"{% endif %}>However, chances are someone might cancel his or her booking. You can try your luck and book anyways. We will put you in the queue.</h5>
+			{% endif %}
+		{% endif %}
+
+		{% if event.can_book or not event.booking_opened %}
+			<form action="{{ path('book', {event: event.slug}) }}" method="post" class="book-form">
+			    {{ form_widget(form) }}
+
+			    <input type="submit" value="Book Now!" id="book-btn" class="btn btn-large btn-success" {% if not event.booking_opened %}disabled{% endif %} />
+			</form>
+		{% endif %}
+	{% endif %}
+
+	<p>Users Online: <strong><span class="user-counter">?</span></strong></p>
+</div>
+
+<hr>
+
+<a href="{{ path('events') }}" class="btn btn-small">View Other Events</a>
+
+{% endblock %}
+
+{% block extra_css %}
+/* jQuery Countdown styles 1.6.0. */
+.hasCountdown {
+	margin: 30px 0;
+}
+.countdown_rtl {
+	direction: rtl;
+}
+.countdown_holding span {
+	color: #888;
+}
+.countdown_row {
+	clear: both;
+	width: 100%;
+	padding: 0px 2px;
+	text-align: center;
+}
+.countdown_show1 .countdown_section {
+	width: 98%;
+}
+.countdown_show2 .countdown_section {
+	width: 48%;
+}
+.countdown_show3 .countdown_section {
+	width: 32.5%;
+}
+.countdown_show4 .countdown_section {
+	width: 24.5%;
+}
+.countdown_show5 .countdown_section {
+	width: 19.5%;
+}
+.countdown_show6 .countdown_section {
+	width: 16.25%;
+}
+.countdown_show7 .countdown_section {
+	width: 14%;
+}
+.countdown_section {
+	display: block;
+	float: left;
+	font-size: 75%;
+	text-align: center;
+}
+.countdown_amount {
+	font-size: 200%;
+}
+.countdown_descr {
+	display: block;
+	width: 100%;
+}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ app.request.baseUrl ~ '/js/jquery.countdown.min.js' }}"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+	var $countdown = $('#countdown');
+	var $userCounter = $('.user-counter');
+	var $placesLeftCounter = $('.places-left-counter');
+	var $bookBtn = $('#book-btn');
+	var $progressBar = $('.progress .bar');
+	var $fullyBooked = $('.fully-booked');
+	var openingTime = new Date('{{ event.opening_time|date('M j, Y H:i:s O') }}');
+	var currentTime = new Date('{{ 'now'|date('M j, Y H:i:s O') }}');
+
+	var updateCounters = function () {
+		$.getJSON('{{ path('update_counters', {event: event.slug}) }}', function (data) {
+			$userCounter.text(data.online);
+			$placesLeftCounter.text(data.placesLeft);
+			$progressBar.css('width', data.placesPercentage + '%');
+			$('#countdown').countdown('option', 'serverSync', function () {
+				return new Date(data.serverTime);
+			});
+
+			if (data.placesPercentage == 0) {
+				$progressBar
+					.removeClass('bar-success')
+					.removeClass('bar-warning')
+					.addClass('bar-danger');
+			} else if (data.placesPercentage <= 25) {
+				$progressBar
+					.removeClass('bar-success')
+					.removeClass('bar-danger')
+					.addClass('bar-warning');
+			} else {
+				$progressBar
+					.removeClass('bar-warning')
+					.removeClass('bar-danger')
+					.addClass('bar-success');
+			}
+
+			if (data.placesLeft <= 0 && ! data.allowBooking) {
+				$bookBtn.val('Fully Booked!').prop('disabled', true);
+			}
+
+			if (data.placesLeft <= 0) {
+				$fullyBooked.fadeIn('slow');
+			}
+		});
+	};
+	updateCounters();
+	setInterval(updateCounters, {{ app.msoc.timer_delta * 1000 }});
+
+	if ($bookBtn.is(':disabled')) {
+		$countdown.countdown({
+			until: openingTime,
+			format: 'dhMS',
+			serverSync: function () {
+				return currentTime;
+			},
+			onExpiry: function () {
+				$bookBtn.prop('disabled', false);
+			}
+		})
+	}
+});
+</script>
+{% endblock %}

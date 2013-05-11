@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %} &middot; Event Booking System &middot; ICU Malaysian Society</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Imperial College Union Malaysian Society - Event Booking System">
+    <meta name="author" content="Jian Yuan">
+
+    <!-- Le styles -->
+    <link href="{{ app.request.baseUrl ~ '/css/bootstrap.min.css' }}" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 20px;
+        padding-bottom: 40px;
+      }
+
+      /* Custom container */
+      .container-narrow {
+        margin: 0 auto;
+        max-width: 700px;
+      }
+      .container-narrow > hr {
+        margin: 30px 0;
+      }
+
+      /* Main marketing message and sign up button */
+      .jumbotron {
+        margin: 60px 0;
+        text-align: center;
+      }
+      .jumbotron h1 {
+        font-size: 72px;
+        line-height: 1;
+      }
+
+      /* Supporting marketing content */
+      .marketing {
+        /*margin: 60px 0;*/
+      }
+      .marketing p + h4 {
+        margin-top: 28px;
+      }
+
+      .book-form, .availability {
+        margin: 30px 0;
+      }
+
+      {% block extra_css %}{% endblock %}
+    </style>
+    <link href="{{ app.request.baseUrl ~ '/css/bootstrap-responsive.min.css' }}" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+  </head>
+
+  <body>
+
+    <div class="container-narrow">
+
+      <div class="masthead">
+        {% if app.session.get('user') %}
+          <ul class="nav nav-pills pull-right">
+            <li><a href="{{ path('events') }}">Events</a></li>
+			{% if app.session.get('user').is_committee %}
+            <li><a href="{{ path('admin') }}">Administer</a></li>
+			{% endif %}
+            <li><a href="{{ path('me') }}">{{ app.session.get('user').username }}</a></li>
+            <li><a href="{{ path('logout') }}">Logout</a></li>
+          </ul>
+        {% endif %}
+        <h4 class="muted">ICU Malaysian Society</h4>
+        <h3 class="muted">Event Booking System</h3>
+      </div>
+
+      <hr>
+
+      {% block content %}{% endblock %}
+
+      <hr>
+
+      <div class="footer">
+        <p>
+          <small>
+            Programmed by <a href="mailto:jian.lee11@ic.ac.uk">Jian Yuan</a> for <a href="http://icu.ms/">ICU Malaysian Society</a>.
+            {% include '_last_code_revision.twig' %}
+          </small>
+        </p>
+      </div>
+
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{{ app.request.baseUrl ~ '/js/jquery-1.8.2.min.js' }}"></script>
+    <script src="{{ app.request.baseUrl ~ '/js/bootstrap.min.js' }}"></script>
+    {% block extra_js %}{% endblock %}
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-35702634-2']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>

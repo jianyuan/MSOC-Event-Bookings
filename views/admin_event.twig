@@ -1,0 +1,25 @@
+{% extends 'layout.twig' %}
+
+{% block title event.name %}
+
+{% block content %}
+
+<h1>Members</h1>
+{% if places|length > 0 %}
+	<ol>
+		{% for place in places %}
+			<li>
+				<strong>{{ place.name }}</strong>
+				{% if not place.has_membership %}<span class="label label-warning">No Membership</span>{% endif %}
+				&ndash;
+				{{ place.time }}
+				&ndash;
+				<em>{{ place.email }}</em>
+			</li>
+		{% endfor %}
+	</ol>
+{% else %}
+	<p>No one signed up yet.</p>
+{% endif %}
+
+{% endblock %}

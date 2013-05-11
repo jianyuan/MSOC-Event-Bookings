@@ -1,0 +1,14 @@
+{% extends 'layout.twig' %}
+
+{% block title 'Members' %}
+
+{% block content %}
+
+<h1>Members</h1>
+<ol>
+	{% for member in members %}
+		<li><strong>{{ member.name }}</strong> <em>({{ member.email }})</em></li>
+	{% endfor %}
+</ol>
+
+{% endblock %}

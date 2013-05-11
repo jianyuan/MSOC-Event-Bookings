@@ -1,0 +1,6 @@
+*.log
+/vendor
+
+/config_dev.php
+
+/config.php

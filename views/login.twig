@@ -1,0 +1,12 @@
+{% extends 'layout.twig' %}
+
+{% block title 'Login' %}
+
+{% block content %}
+<h4>Imperial College Student Login</h4>
+<form action="{{ path('login') }}" method="post">
+    {{ form_widget(form) }}
+
+    <input type="submit" value="Log In" class="btn btn-large btn-primary" />
+</form>
+{% endblock %}

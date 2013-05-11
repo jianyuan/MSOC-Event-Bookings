@@ -1,0 +1,44 @@
+{% extends 'layout.twig' %}
+
+{% block title 'Events' %}
+
+{% macro eventList(events, header) %}
+	{% if events %}
+		<h3>{{ header }}{% if events|length > 1 %}s{% endif %}</h3>
+
+		<div class="row-fluid marketing">
+			<div class="span12">
+				{% for event in events %}
+					<h4><a href="{{ path('book', {event: event.slug}) }}">{{ event.name }}</a></h4>
+					{% if event.description %}
+						<p>{{ event.description|raw }}</p>
+					{% endif %}
+
+					{% if event.booking %}
+						<p>Booked on <strong>{{ event.booking.time|date("d/m/Y") }}</strong> at <strong>{{ event.booking.time|date("h:ia") }}</strong>.</p>
+					{% else %}
+						{% if event.fully_booked %}
+							<p>Fully booked!</p>
+						{% elseif event.booking_opened %}
+							<p>Booking now open!</p>
+						{% else %}
+							<p>Booking opens on <strong>{{ event.opening_time|date("d/m/Y") }}</strong> at <strong>{{ event.opening_time|date("h:ia") }}</strong>.</p>
+						{% endif %}
+					{% endif %}
+					<hr>
+				{% endfor %}
+			</div>
+		</div>
+	{% endif %}
+{% endmacro %}
+
+{% block content %}
+
+	{% if unbookedEvents|length > 0 or bookedEvents|length > 0 %}
+		{{ _self.eventList(unbookedEvents, 'Event') }}
+		{{ _self.eventList(bookedEvents, 'Booked Event') }}
+	{% else %}
+		<p>There are no events planned at the moment.</p>
+	{% endif %}
+
+{% endblock %}
