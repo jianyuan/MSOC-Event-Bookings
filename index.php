@@ -323,42 +323,50 @@ $app->get('/me', function() use ($app) {
  * ANY /login
  * Login
  */
-$app->match('/login', function(Request $request) use ($app) {
-	$form = $app['form.factory']->createBuilder('form')
-		->add('username', 'text', array(
-			'constraints' => new Assert\NotBlank()
-		))
-		->add('password', 'password', array(
-			'constraints' => new Assert\NotBlank()
-		))
-		->getForm();
-	
-	if ($request->isMethod('POST')) {
-		$form->bind($request);
+$app
+	->match('/login', function(Request $request) use ($app) {
+		$form = $app['form.factory']->createBuilder('form')
+			->add('username', 'text', [
+				'constraints' => new Assert\NotBlank(),
+				'attr' => [
+					'placeholder' => 'e.g. abc123',
+					'class '=> 'input-block-level'
+				],
+			])
+			->add('password', 'password', [
+				'constraints' => new Assert\NotBlank(),
+				'attr' => [
+					'class '=> 'input-block-level',
+				],
+			])
+			->getForm();
 		
-		if ($form->isValid()) {
-			$data = $form->getData();
-			$data['username'] = strtolower($data['username']);
+		if ($request->isMethod('POST')) {
+			$form->bind($request);
 			
-			if (pam_auth($data['username'], $data['password'])) {
-				$app['session']->set('user', array(
-					'username' => $data['username'],
-					'is_committee' => in_array($data['username'], $app['msoc']['committee_members']),
-				));
-				$app['monolog']->addInfo(sprintf("User '%s' logged in.", $data['username']));
-				return $app->redirect($app['url_generator']->generate('homepage'));
-			} else {
-				$form->addError(new FormError('Invalid login credentials. Please make sure that you login using your Imperial College ID and password.'));
+			if ($form->isValid()) {
+				$data = $form->getData();
+				$data['username'] = strtolower($data['username']);
+				
+				if (pam_auth($data['username'], $data['password'])) {
+					$app['session']->set('user', array(
+						'username' => $data['username'],
+						'is_committee' => in_array($data['username'], $app['msoc']['committee_members']),
+					));
+					$app['monolog']->addInfo(sprintf("User '%s' logged in.", $data['username']));
+					return $app->redirect($app['url_generator']->generate('homepage'));
+				} else {
+					$form->addError(new FormError('Invalid login credentials. Please make sure that you login using your Imperial College ID and password.'));
+				}
 			}
 		}
-	}
 
-	return $app['twig']->render('login.twig', array(
-		'form' => $form->createView(),
-	));
-})
-->bind('login')
-->requireHttps();
+		return $app['twig']->render('login.twig', array(
+			'form' => $form->createView(),
+		));
+	})
+	->bind('login')
+	->requireHttps();
 
 
 /**

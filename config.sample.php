@@ -8,6 +8,7 @@ return array(
     ),
     'msoc' => array(
         'timer_delta' => 5,
+        'check_membership' => false,
         'purchase_membership_url' => 'https://www.imperialcollegeunion.org/shop/club-society-project-products/malaysian-products/312/malaysian-membership-12/13',
         'committee_members' => array(
             'imperial',
