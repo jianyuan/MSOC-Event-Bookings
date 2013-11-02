@@ -5,7 +5,7 @@
 {% block content %}
 
 <h1>Administer</h1>
-<h3>Events</h3>
+<h3>Event Bookings</h3>
 <ul>
 	{% for event in events %}
 		<li><a href="{{ path('admin_event', {id: event.id}) }}">{{ event.name }}</a></li>
@@ -15,7 +15,9 @@
 <h3>Society</h3>
 <ul>
 	<li><a href="{{ path('admin_last_actives') }}">View Last Active Users</a></li>
-	<li><a href="{{ path('admin_members') }}">View ICUMS Members</a></li>
+  {% if app.msoc.check_membership %}
+  	<li><a href="{{ path('admin_members') }}">View ICUMS Members</a></li>
+  {% endif %}
 </ul>
 
 {% endblock %}

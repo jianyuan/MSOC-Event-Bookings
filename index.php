@@ -23,7 +23,6 @@ $app->register(new Silex\Provider\SessionServiceProvider());
 
 // Load config
 $app->register(new Igorw\Silex\ConfigServiceProvider(__DIR__.'/config.php'));
-
 if ($app['env'] === 'dev') {
 	$app->register(new Igorw\Silex\ConfigServiceProvider(__DIR__.'/config_dev.php'));
 }
@@ -125,7 +124,7 @@ $checkCommittee = function() use ($app) {
 $eventProvider = function($event) use ($app) {
 	$user = $app['session']->get('user');
 
-	if ( ! is_array($event)) {
+	if (is_string($event)) {
 		$event = $app['db']->fetchAssoc('SELECT * FROM events WHERE slug = ? AND is_active = 1', array($event));
 	}
 
