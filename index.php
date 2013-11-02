@@ -10,7 +10,7 @@ require_once __DIR__.'/vendor/autoload.php';
 
 $app = new Silex\Application();
 
-$app['env'] = $_SERVER['HTTP_HOST'] === 'localhost' ? 'dev' : 'prod';
+$app['env'] = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'dev' : 'prod';
 
 $app->register(new Silex\Provider\MonologServiceProvider());
 $app->register(new Silex\Provider\TwigServiceProvider());
@@ -35,7 +35,7 @@ if ($app['debug'] === true) {
 	$app['twig']->addExtension(new Twig_Extension_Debug());
 }
 
-if ($_SERVER['HTTP_HOST'] == 'localhost')
+if ($app['env'] !== 'prod')
 {
 	function pam_auth($user, $pass)
 	{
@@ -63,23 +63,23 @@ if ($_SERVER['HTTP_HOST'] == 'localhost')
 		);
 	}
 }
-else
-{
-	$user = $app['session']->get('user');
-	if ($user && $user['username']) {
-		$app['debug'] = true;
-	}
+// else
+// {
+// 	$user = $app['session']->get('user');
+// 	if ($user && $user['username']) {
+// 		$app['debug'] = true;
+// 	}
 
-}
+// }
 
 // temporarily disabled membership crawler
-$app['membership_crawler'] = $app->protect(function () use ($app) {
+$app['membership_crawler'] = $app->protect(function() use ($app) {
 	return array();
 });
 
 // require_once 'icucrawler.php';
 
-// $app['membership_crawler'] = $app->protect(function () use ($app) {
+// $app['membership_crawler'] = $app->protect(function() use ($app) {
 // 	require_once 'Zend/Loader/Autoloader.php';
 // 	Zend_Loader_Autoloader::getInstance();
 	
@@ -103,7 +103,7 @@ $app['membership_crawler'] = $app->protect(function () use ($app) {
 // 	return true;
 // });
 
-$checkLogin = function () use ($app) {
+$checkLogin = function() use ($app) {
 	$user = $app['session']->get('user');
 	
 	if ($user === null || ! ldap_get_info($user['username'])) {
@@ -111,7 +111,7 @@ $checkLogin = function () use ($app) {
 	}
 };
 
-$checkCommittee = function () use ($app) {
+$checkCommittee = function() use ($app) {
 	$user = $app['session']->get('user');
 	
 	if ($user === null || ! in_array($user['username'], $app['msoc']['committee_members'])) {
@@ -122,7 +122,7 @@ $checkCommittee = function () use ($app) {
 	}
 };
 
-$eventProvider = function ($event) use ($app) {
+$eventProvider = function($event) use ($app) {
 	$user = $app['session']->get('user');
 
 	if ( ! is_array($event)) {
@@ -151,16 +151,19 @@ $eventProvider = function ($event) use ($app) {
 	return $event;
 };
 
-$app->get('/logout', function () use ($app) {
+/**
+ * GET /logout
+ */
+$app->get('/logout', function() use ($app) {
 	$app['session']->remove('user');
 	return $app->redirect($app['url_generator']->generate('login'));
 })
 ->bind('logout');
 
 /**
-  * Events page
-  */
-$app->get('/events', function () use ($app, $eventProvider) {
+ * GET /events
+ */
+$app->get('/events', function() use ($app, $eventProvider) {
 	$user = $app['session']->get('user');
 
 	$unbookedEvents = $app['db']->fetchAll('SELECT * FROM events WHERE is_active = 1 AND id NOT IN (SELECT event_id FROM places WHERE username = ?) ORDER BY opening_time ASC', array($user['username']));
@@ -181,7 +184,10 @@ $app->get('/events', function () use ($app, $eventProvider) {
 ->bind('events')
 ->before($checkLogin);
 
-$app->get('/book/{event}', function ($event) use ($app) {
+/**
+ * GET /book/{event}
+ */
+$app->get('/book/{event}', function($event) use ($app) {
 	$user = $app['session']->get('user');
 
 	$form = $app['form.factory']->createBuilder('form')
@@ -196,7 +202,10 @@ $app->get('/book/{event}', function ($event) use ($app) {
 ->before($checkLogin)
 ->convert('event', $eventProvider);
 
-$app->post('/book/{event}', function ($event) use ($app) {
+/**
+ * POST /book/{event}
+ */
+$app->post('/book/{event}', function($event) use ($app) {
 	$user = $app['session']->get('user');
 
 	if ( ! $event['booking_opened']) {
@@ -243,9 +252,9 @@ $app->post('/book/{event}', function ($event) use ($app) {
 ->convert('event', $eventProvider);
 
 /**
-  * View booking details
-  */
-$app->get('/book/{event}/details', function ($event) use ($app) {
+ * GET /book/{event}/details
+ */
+$app->get('/book/{event}/details', function($event) use ($app) {
 	$user = $app['session']->get('user');
 
 	if ( ! $event['booking']) {
@@ -265,10 +274,11 @@ $app->get('/book/{event}/details', function ($event) use ($app) {
 ->convert('event', $eventProvider);
 
 /**
-  * Update and get total active
-  * Get places left
-  */
-$app->get('/update_counters/{event}', function ($event) use ($app) {
+ * GET /update_counters/{event}
+ * Update and get total active
+ * Get places left
+ */
+$app->get('/update_counters/{event}', function($event) use ($app) {
 	$user = $app['session']->get('user');
 
 	$query = 'REPLACE INTO last_actives (username, event_id, time) VALUES (?, ?, ?)';
@@ -293,9 +303,10 @@ $app->get('/update_counters/{event}', function ($event) use ($app) {
 ->convert('event', $eventProvider);
 
 /**
-  * My Info
-  */
-$app->get('/me', function () use ($app) {
+ * GET /me
+ * My Info
+ */
+$app->get('/me', function() use ($app) {
 	$user = $app['session']->get('user');
 
 	return $app['twig']->render('me.twig', array(
@@ -308,22 +319,11 @@ $app->get('/me', function () use ($app) {
 ->bind('me')
 ->before($checkLogin);
 
-
 /**
-  * Refresh membership data
-  */
-$app->get('/refresh_membership', function () use ($app) {
-	return $app->json($app['membership_crawler']());
-})
-->bind('refresh_membership')
-->before($checkLogin)
-->before($checkCommittee);
-
-
-/**
-  * Login
-  */
-$app->match('/login', function (Request $request) use ($app) {
+ * ANY /login
+ * Login
+ */
+$app->match('/login', function(Request $request) use ($app) {
 	$form = $app['form.factory']->createBuilder('form')
 		->add('username', 'text', array(
 			'constraints' => new Assert\NotBlank()
@@ -362,32 +362,38 @@ $app->match('/login', function (Request $request) use ($app) {
 
 
 /**
-  * Homepage
-  */
-$app->get('/', function () use ($app) {
-	$user = $app['session']->get('user');
-	$hasMembership = $app['db']->fetchColumn('SELECT COUNT(*) FROM memberships WHERE username = ?', array($user['username']));
-	
-	if ( ! $hasMembership) {
-		$app['membership_crawler']();
-		// Recheck for membership
-		$hasMembership = $app['db']->fetchColumn('SELECT COUNT(*) FROM memberships WHERE username = ?', array($user['username']));
-	}
-	
-	if ($hasMembership) {
+ * GET /
+ * homepage
+ */
+$app
+	->get('/', function() use ($app) {
+		$user = $app['session']->get('user');
+
+		if ($app['msoc']['check_membership']) {
+			$hasMembership = $app['db']->fetchColumn('SELECT COUNT(*) FROM memberships WHERE username = ?', array($user['username']));
+
+			if ( ! $hasMembership) {
+				$app['membership_crawler']();
+				// Recheck for membership
+				$hasMembership = $app['db']->fetchColumn('SELECT COUNT(*) FROM memberships WHERE username = ?', array($user['username']));
+			}
+
+			if ( ! $hasMembership) {
+				$app['monolog']->addWarning(sprintf("User '%s' has no membership.", $user['username']));
+				return $app['twig']->render('no_membership.twig');
+			}
+		}
+		
 		return $app->redirect($app['url_generator']->generate('events'));
-	} else {
-		$app['monolog']->addWarning(sprintf("User '%s' has no membership.", $user['username']));
-		return $app['twig']->render('no_membership.twig');
-	}
-})
-->bind('homepage')
-->before($checkLogin);
+	})
+	->bind('homepage')
+	->before($checkLogin);
 
 /**
-  * Admin
-  */
-$app->get('/admin', function () use ($app) {
+ * GET /admin
+ * Admin
+ */
+$app->get('/admin', function() use ($app) {
 	return $app['twig']->render('admin.twig', array(
 		'events' => $app['db']->fetchAll('SELECT * FROM events'),
 	));
@@ -397,9 +403,10 @@ $app->get('/admin', function () use ($app) {
 ->before($checkCommittee);
 
 /**
-  * View registered ICUMS members
-  */
-$app->get('/admin/members', function () use ($app) {
+ * GET /admin/members
+ * View registered ICUMS members
+ */
+$app->get('/admin/members', function() use ($app) {
 	$members = $app['db']->fetchAll('SELECT * FROM memberships');
 	
 	foreach ($members as $key => $row) {
@@ -416,9 +423,10 @@ $app->get('/admin/members', function () use ($app) {
 ->before($checkCommittee);
 
 /**
-  * View last active users
-  */
-$app->get('/admin/last_actives', function () use ($app) {
+ * GET /admin/last_actives
+ * View last active users
+ */
+$app->get('/admin/last_actives', function() use ($app) {
 	$users = $app['db']->fetchAll('SELECT * FROM last_actives ORDER BY time DESC');
 	
 	foreach ($users as $key => $row) {
@@ -435,9 +443,10 @@ $app->get('/admin/last_actives', function () use ($app) {
 ->before($checkCommittee);
 
 /**
-  * View bookings for a particular event
-  */
-$app->get('/admin/event/{id}.csv', function ($id) use ($app) {
+ * GET /admin/event/{id}.csv
+ * View bookings for a particular event
+ */
+$app->get('/admin/event/{id}.csv', function($id) use ($app) {
 	$event = $app['db']->fetchAssoc('SELECT * FROM events WHERE id = ?', array($id));
 	
 	if ( ! $event) {
@@ -467,9 +476,10 @@ $app->get('/admin/event/{id}.csv', function ($id) use ($app) {
 ->before($checkCommittee);
 
 /**
-  * View bookings for a particular event
-  */
-$app->get('/admin/event/{id}', function ($id) use ($app) {
+ * GET /admin/event/{id}
+ * View bookings for a particular event
+ */
+$app->get('/admin/event/{id}', function($id) use ($app) {
 	$event = $app['db']->fetchAssoc('SELECT * FROM events WHERE id = ?', array($id));
 	
 	if ( ! $event) {
